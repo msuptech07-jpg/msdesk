@@ -735,7 +735,20 @@ class InputModel {
     }
   }
 
+  // MSUPTECH_MSDESK_ESC_TELA_CHEIA_V1: no computador, soltar o ESC sai da tela cheia (pedido do Marcus 20/10).
+  // Vale tambem no modo de teclado padrao (captura nativa), em que o "apertar" vai ao remoto e o "soltar" chega aqui;
+  // o ESC continua indo para o computador remoto normalmente.
+  void _escSaiDaTelaCheia(bool soltou, LogicalKeyboardKey tecla) {
+    if (isDesktop &&
+        soltou &&
+        tecla == LogicalKeyboardKey.escape &&
+        stateGlobal.fullscreen.isTrue) {
+      stateGlobal.setFullscreen(false);
+    }
+  }
+
   KeyEventResult handleRawKeyEvent(RawKeyEvent e) {
+    _escSaiDaTelaCheia(e is RawKeyUpEvent, e.logicalKey);
     if (isViewOnly) return KeyEventResult.handled;
     if (isViewCamera) return KeyEventResult.handled;
     if (!isInputSourceFlutter) {
@@ -821,6 +834,7 @@ class InputModel {
   }
 
   KeyEventResult handleKeyEvent(KeyEvent e) {
+    _escSaiDaTelaCheia(e is KeyUpEvent, e.logicalKey);
     if (isViewOnly) return KeyEventResult.handled;
     if (isViewCamera) return KeyEventResult.handled;
     if (!isInputSourceFlutter) {
