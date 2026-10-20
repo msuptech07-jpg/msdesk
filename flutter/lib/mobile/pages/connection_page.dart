@@ -19,6 +19,7 @@ import '../../models/model.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
 import 'home_page.dart';
+import '../../msdesk_licenca.dart';
 
 /// Connection page for connecting to a remote peer.
 class ConnectionPage extends StatefulWidget implements PageShape {
@@ -91,6 +92,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
           if (!bind.isCustomClient() && !isIOS)
             Obx(() => _buildUpdateUI(stateGlobal.updateUrl.value)),
           if (isAndroid && !bind.isOutgoingOnly()) _buildMeuId(),
+          const MsdeskLicencaFaixa(), // MSUPTECH_MSDESK_LICENCA_V1
           _buildRemoteIDTextField(),
         ])),
         SliverFillRemaining(

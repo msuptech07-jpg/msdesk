@@ -1960,7 +1960,16 @@ pub async fn io_loop<T: InvokeUiSession>(handler: Session<T>, round: u32) {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let (sender, mut receiver) = mpsc::unbounded_channel::<Data>();
     *handler.sender.write().unwrap() = Some(sender.clone());
-    let token = LocalConfig::get_option("access_token");
+    // MSUPTECH_MSDESK_LICENCA_V1: a licenca do MS Desk vai no campo token de cada pedido de conexao; o servidor
+    // de conexao da MSuptech confere (sem licenca valida recusa). Sem licenca guardada, segue o comportamento original.
+    let token = {
+        let licenca = LocalConfig::get_option("msdesk-licenca");
+        if licenca.is_empty() {
+            LocalConfig::get_option("access_token")
+        } else {
+            licenca
+        }
+    };
     let key = crate::get_key(false).await;
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     if handler.is_port_forward() {

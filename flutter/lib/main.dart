@@ -29,6 +29,7 @@ import 'mobile/pages/home_page.dart';
 import 'mobile/pages/server_page.dart';
 import 'mobile/widgets/deploy_dialog.dart';
 import 'models/platform_model.dart';
+import 'msdesk_licenca.dart';
 
 /// Basic window and launch properties.
 int? kWindowId;
@@ -142,6 +143,7 @@ void runMainApp(bool startService) async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  MsdeskLicenca.iniciar(); // MSUPTECH_MSDESK_LICENCA_V1
 
   bool? alwaysOnTop;
   if (isDesktop) {
@@ -182,6 +184,7 @@ void runMobileApp() async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  MsdeskLicenca.iniciar(); // MSUPTECH_MSDESK_LICENCA_V1
   await initUniLinks();
 }
 
