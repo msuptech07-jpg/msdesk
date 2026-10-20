@@ -89,4 +89,28 @@ for origem, destinos in copias.items():
     for d in destinos:
         shutil.copyfile(o, d)
         print(f"ok copiado {o} -> {d}")
+# MSUPTECH_MSDESK_ANDROID_V1 — Android: nome, identificador proprio (instala separado do RustDesk oficial), cor e icones
+app = "flutter/android/app"
+troca(f"{app}/build.gradle", 'applicationId "com.carriez.flutter_hbb"', 'applicationId "com.msuptech.msdesk"')
+man = f"{app}/src/main/AndroidManifest.xml"
+troca(man, 'android:label="RustDesk"', f'android:label="{NOME}"')
+troca(man, 'android:label="RustDesk Input"', f'android:label="{NOME} Input"')
+strings = f"{app}/src/main/res/values/strings.xml"
+troca(strings, '<string name="app_name">RustDesk</string>', f'<string name="app_name">{NOME}</string>')
+troca(strings, "when RustDesk screen sharing is established", f"when {NOME} screen sharing is established")
+troca(strings, "Keeps the RustDesk remote desktop host available", f"Keeps the {NOME} remote desktop host available")
+kt = f"{app}/src/main/kotlin/com/carriez/flutter_hbb"
+troca(f"{kt}/MainService.kt", 'const val DEFAULT_NOTIFY_TITLE = "RustDesk"', f'const val DEFAULT_NOTIFY_TITLE = "{NOME}"')
+troca(f"{kt}/MainService.kt", 'val channelName = "RustDesk Service"', f'val channelName = "{NOME}"')
+troca(f"{kt}/BootReceiver.kt", 'Toast.makeText(context, "RustDesk is Open", Toast.LENGTH_LONG)', f'Toast.makeText(context, "{NOME} aberto", Toast.LENGTH_LONG)')
+troca(f"{app}/src/main/res/values/colors.xml", '<color name="primary">#FF0071FF</color>', '<color name="primary">#FF2F5BA8</color>')
+for xml in ("ic_launcher.xml", "ic_launcher_round.xml"):
+    p = f"{app}/src/main/res/mipmap-anydpi-v26/{xml}"
+    troca(p, '<background android:drawable="@color/ic_launcher_background"/>', '<background android:drawable="@mipmap/ic_launcher_bg"/>')
+    troca(p, '<monochrome android:drawable="@mipmap/ic_launcher_foreground"/>', '<monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>')
+for dens in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"):
+    o = os.path.join(marca, "android", f"mipmap-{dens}")
+    for arq in os.listdir(o):
+        shutil.copyfile(os.path.join(o, arq), f"{app}/src/main/res/mipmap-{dens}/{arq}")
+    print(f"ok icones android mipmap-{dens}")
 print("marca MS Desk aplicada")
