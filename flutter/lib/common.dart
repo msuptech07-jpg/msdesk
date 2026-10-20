@@ -988,6 +988,12 @@ makeMobileActionsOverlayEntry(VoidCallback? onHide, {FFI? ffi}) {
     computeOverlayPosition() {
       final screenW = MediaQuery.of(context).size.width;
       final screenH = MediaQuery.of(context).size.height;
+      // MSUPTECH_MSDESK_BARRA_CANTO_V1: no computador a barra voltar/inicio/apps do celular nasce no canto inferior
+      // direito (faixa preta ao lado da tela do celular); no meio ela ficava em cima do conteudo.
+      if (isDesktop) {
+        return Offset(screenW - (overlayW + 24) * scale,
+            screenH - (overlayH + 24) * scale);
+      }
       final left = (screenW - overlayW * scale) / 2;
       final top = screenH - (overlayH + 80) * scale;
       return Offset(left, top);

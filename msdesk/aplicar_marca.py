@@ -57,6 +57,14 @@ troca(cfg, "pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = D
       f"        [{itens}]\n"
       "            .iter().map(|(k, v)| (k.to_string(), v.to_string())).collect());")
 
+# MSUPTECH_MSDESK_TELA_AJUSTADA_V1: no computador, a tela remota abre AJUSTADA A JANELA e com barra de rolagem manual.
+# Antes abria no tamanho original com "rolagem automatica": a tela de celular (comprida) passava da janela e ia
+# rolando sozinha acompanhando o mouse (reclamacao do Marcus 20/10).
+troca(cfg, 'keys::OPTION_VIEW_STYLE => self.get_string(key, "original", vec!["adaptive"]),',
+      'keys::OPTION_VIEW_STYLE => self.get_string(key, "adaptive", vec!["original"]),')
+troca(cfg, 'self.get_string(key, "scrollauto", vec!["scrolledge", "scrollbar"])',
+      'self.get_string(key, "scrollbar", vec!["scrollauto", "scrolledge"])')
+
 # nome que o Windows mostra (propriedades do arquivo, gerenciador de tarefas, barra de tarefas)
 rc = "flutter/windows/runner/Runner.rc"
 troca(rc, 'VALUE "CompanyName", "Purslane Tech Pte. Ltd." "\\0"', 'VALUE "CompanyName", "MSuptech" "\\0"')
