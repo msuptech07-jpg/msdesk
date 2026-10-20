@@ -20,6 +20,7 @@ import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
 import 'home_page.dart';
 import '../../msdesk_licenca.dart';
+import '../widgets/msdesk_balao.dart';
 
 /// Connection page for connecting to a remote peer.
 class ConnectionPage extends StatefulWidget implements PageShape {
@@ -92,6 +93,15 @@ class _ConnectionPageState extends State<ConnectionPage> {
           if (!bind.isCustomClient() && !isIOS)
             Obx(() => _buildUpdateUI(stateGlobal.updateUrl.value)),
           if (isAndroid && !bind.isOutgoingOnly()) _buildMeuId(),
+          // MSUPTECH_MSDESK_BALOES_V1: primeiro balao, explica os dois usos do app
+          if (isAndroid && !bind.isOutgoingOnly())
+            const MsdeskBalao(
+                chave: 'inicio',
+                titulo: 'Como usar o MS Desk',
+                passos: [
+                  'Para alguém **acessar este celular**: toque em **Receber acesso** e siga os balões.',
+                  'Para **acessar outro aparelho**: digite o ID dele no campo abaixo e toque na seta.',
+                ]),
           const MsdeskLicencaFaixa(), // MSUPTECH_MSDESK_LICENCA_V1
           _buildRemoteIDTextField(),
         ])),

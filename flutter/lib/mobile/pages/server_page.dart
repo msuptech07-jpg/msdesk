@@ -14,6 +14,7 @@ import '../../consts.dart';
 import '../../models/platform_model.dart';
 import '../../models/server_model.dart';
 import 'home_page.dart';
+import '../widgets/msdesk_balao.dart';
 
 class ServerPage extends StatefulWidget implements PageShape {
   @override
@@ -213,6 +214,26 @@ class _ServerPageState extends State<ServerPage> {
                         gFFI.serverModel.isStart
                             ? ServerInfo()
                             : ServiceNotRunningNotification(),
+                        // MSUPTECH_MSDESK_BALOES_V1: sem Controle de Entrada o tecnico so ve, nao mexe
+                        if (serverModel.isStart && !serverModel.inputOk)
+                          const MsdeskBalao(
+                              titulo: 'Para o técnico mexer no celular',
+                              margem: EdgeInsets.fromLTRB(12, 10, 12, 0),
+                              passos: [
+                                'Em **Permissões** (abaixo), ligue **Controle de Entrada**.',
+                                'O Android abre a **Acessibilidade**: toque em **MS Desk** (pode estar em **Apps instalados** ou **Serviços baixados**) e ative.',
+                                'Se aparecer **Configuração restrita**: abra Configurações > Apps > MS Desk, toque nos **3 pontinhos** no canto de cima, em **Permitir configurações restritas**, e tente de novo.',
+                              ]),
+                        if (serverModel.isStart)
+                          const MsdeskBalao(
+                              chave: 'servico-ligado',
+                              titulo: 'Pronto para receber acesso',
+                              margem: EdgeInsets.fromLTRB(12, 10, 12, 0),
+                              passos: [
+                                'Passe o **ID** e a **senha** de uso único (acima) para quem vai acessar.',
+                                'Quando a pessoa conectar, aparece um pedido nesta tela: toque em **Aceitar**.',
+                                'Para encerrar, toque em **Desconectar** ou em **Parar serviço**.',
+                              ]),
                         const ConnectionManager(),
                         const PermissionChecker(),
                         SizedBox.fromSize(size: const Size(0, 15.0)),
@@ -256,7 +277,16 @@ class ServiceNotRunningNotification extends StatelessWidget {
                     serverModel.toggleService();
                   }
                 },
-                label: Text(translate("Start service")))
+                label: Text(translate("Start service"))),
+            // MSUPTECH_MSDESK_BALOES_V1: o que aparece depois de tocar (aviso de golpe e gravacao de tela)
+            const MsdeskBalao(
+                titulo: 'Liberar o acesso a este celular',
+                margem: EdgeInsets.only(top: 12),
+                passos: [
+                  'Toque em **Iniciar Serviço**.',
+                  'Aparece o aviso **"Você pode estar sendo ENGANADO!"**. Ele existe para proteger você: só continue se conhece quem vai acessar. Espere a contagem e toque em **Eu concordo**.',
+                  'O Android pergunta se pode gravar a tela. Se ele perguntar o que compartilhar, escolha **Tela inteira**. Depois toque em **Começar agora** (ou **Iniciar**).',
+                ]),
           ],
         ));
   }
