@@ -847,7 +847,11 @@ impl Client {
         };
 
         let switch_code = interface.get_switch_code();
-        let legacy_secure = !key.is_empty() && (!token.is_empty() || !switch_code.is_empty());
+        // MSUPTECH_MSDESK_LICENCA_SEM_TROCA_V1 (20/10/2026): a licenca do MS Desk vai no campo token, e token preenchido
+        // fazia o programa pedir ao servidor a troca de chave do RustDesk Server Pro. O nosso servidor (OSS) nao responde:
+        // a conexao esperava 18 s e caia com "Failed to secure tcp: deadline has elapsed". Licenca nao pede a troca.
+        let legacy_secure = !key.is_empty()
+            && ((!token.is_empty() && !token.starts_with("msdesk1.")) || !switch_code.is_empty());
         let carries_offer = webrtc_offerer.as_ref().and_then(|g| g.stream()).is_some();
         // Counted from before the key exchange, so the exchange spends the UDP NAT test's own
         // wait rather than replacing it: the test runs beside both.
@@ -1795,7 +1799,12 @@ impl Client {
                 .await
                 .with_context(|| "Failed to connect to rendezvous server")?;
 
-            if !key.is_empty() && (!token.is_empty() || !switch_code.is_empty()) {
+            // MSUPTECH_MSDESK_LICENCA_SEM_TROCA_V1 (20/10/2026): a licenca do MS Desk vai no campo token, e token preenchido
+            // fazia o programa pedir ao servidor a troca de chave do RustDesk Server Pro. O nosso servidor (OSS) nao responde:
+            // a conexao esperava 18 s e caia com "Failed to secure tcp: deadline has elapsed". Licenca nao pede a troca.
+            if !key.is_empty()
+                && ((!token.is_empty() && !token.starts_with("msdesk1.")) || !switch_code.is_empty())
+            {
                 secure_tcp(&mut socket, key).await?;
             }
 
