@@ -60,6 +60,8 @@ jobs:
 
       - name: Aplicar marca MS Desk
         shell: bash
+        env:
+          MSDESK_APP_NAME: MSDesk
         run: python3 msdesk/aplicar_marca.py
 
       - name: Install LLVM and Clang

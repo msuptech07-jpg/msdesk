@@ -31,8 +31,12 @@ troca(cfg, 'pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];',
       f'pub const RENDEZVOUS_SERVERS: &[&str] = &["{SERVIDOR}"];')
 troca(cfg, 'pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";',
       f'pub const RS_PUB_KEY: &str = "{CHAVE}";')
+# MSUPTECH_MSDESK_NOME_INTERNO_V1: no Windows o nome interno nao pode ter espaco (o instalador exige [a-zA-Z0-9-]+;
+# com "MS Desk" a instalacao falhava e a janela fechava). O workflow do Windows passa MSDESK_APP_NAME=MSDesk;
+# o Android segue "MS Desk" (la nao tem esse instalador e mudar o nome trocaria o ID do celular).
+NOME_INTERNO = os.environ.get("MSDESK_APP_NAME", NOME)
 troca(cfg, 'pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());',
-      f'pub static ref APP_NAME: RwLock<String> = RwLock::new("{NOME}".to_owned());')
+      f'pub static ref APP_NAME: RwLock<String> = RwLock::new("{NOME_INTERNO}".to_owned());')
 
 # MSUPTECH_MSDESK_SEGURANCA_V1: padrao de seguranca de fabrica (o tecnico/cliente ainda pode mudar no proprio programa).
 # - senha de uso unico de 8 caracteres com letras (muda a cada sessao, como AnyDesk/TeamViewer)
