@@ -34,6 +34,29 @@ troca(cfg, 'pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCs
 troca(cfg, 'pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_owned());',
       f'pub static ref APP_NAME: RwLock<String> = RwLock::new("{NOME}".to_owned());')
 
+# MSUPTECH_MSDESK_SEGURANCA_V1: padrao de seguranca de fabrica (o tecnico/cliente ainda pode mudar no proprio programa).
+# - senha de uso unico de 8 caracteres com letras (muda a cada sessao, como AnyDesk/TeamViewer)
+# - nao se anuncia na rede local e nao aceita conexao direta por IP (so pelo nosso servidor, com a nossa chave)
+# - o tecnico nao altera as configuracoes do cliente a distancia
+# - desconecta sozinho apos 10 min sem uso
+# - nao oferece "atualizar" para o RustDesk oficial (perderia a marca e o servidor)
+PADRAO = {
+    "verification-method": "use-temporary-password",
+    "temporary-password-length": "8",
+    "allow-numeric-one-time-password": "N",
+    "enable-lan-discovery": "N",
+    "direct-server": "N",
+    "allow-remote-config-modification": "N",
+    "allow-auto-disconnect": "Y",
+    "auto-disconnect-timeout": "10",
+    "enable-check-update": "N",
+}
+itens = ", ".join(f'("{k}", "{v}")' for k, v in PADRAO.items())
+troca(cfg, "pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
+      "pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(\n"
+      f"        [{itens}]\n"
+      "            .iter().map(|(k, v)| (k.to_string(), v.to_string())).collect());")
+
 # nome que o Windows mostra (propriedades do arquivo, gerenciador de tarefas, barra de tarefas)
 rc = "flutter/windows/runner/Runner.rc"
 troca(rc, 'VALUE "CompanyName", "Purslane Tech Pte. Ltd." "\\0"', 'VALUE "CompanyName", "MSuptech" "\\0"')
