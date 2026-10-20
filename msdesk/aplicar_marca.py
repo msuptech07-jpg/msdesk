@@ -127,4 +127,28 @@ for dens in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"):
     for arq in os.listdir(o):
         shutil.copyfile(os.path.join(o, arq), f"{app}/src/main/res/mipmap-{dens}/{arq}")
     print(f"ok icones android mipmap-{dens}")
+# MSUPTECH_MSDESK_DESEMPENHO_V1: "lento e imagem ruim" (Marcus 20/10). Tres travas do RustDesk que so liberam o
+# desempenho cheio no servidor PUBLICO dele (rustdesk.com); no nosso servidor ficavam ligadas:
+# 1) using_public_server(): como o nosso servidor vai fixo no codigo (nao na opcao "custom-rendezvous-server"), o
+#    programa se achava no servidor publico e limitava imagem personalizada a 50 e fps a 30 quando a conexao passa
+#    pelo repasse. Aqui nunca e publico.
+troca("src/common.rs",
+      'crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()',
+      "false")
+# 2) punch UDP e IPv6 vinham DESLIGADOS por padrao fora do servidor publico (get_local_option devolvia "N"): sem eles a
+#    conexao direta (ponto a ponto) quase nunca fecha e tudo vai pelo repasse da VPS. Nosso hbbs ja trata o punch UDP.
+#    WebRTC segue desligado (precisa de servidor STUN/ICE que nao temos).
+troca("src/common.rs",
+      '            if !is_public(&Config::get_rendezvous_server()) {\n                return "N".to_owned();\n            }',
+      '            if key == keys::OPTION_ENABLE_WEBRTC {\n                return "N".to_owned();\n            }\n            return "Y".to_owned();')
+# 3) padrao de imagem: qualidade personalizada 80 (o "equilibrado" sem escolha ficava em ~50) e 60 fps quando o
+#    aparelho nao escolheu (antes 30). A rede/CPU ainda reduzem sozinhas (QoS adaptativo do RustDesk).
+troca(cfg, "pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
+      "pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(\n"
+      '        [("image_quality", "custom"), ("custom_image_quality", "80")]\n'
+      "            .iter().map(|(k, v)| (k.to_string(), v.to_string())).collect());")
+troca("src/client.rs",
+      'if let Some(custom_fps) = self.options.get("custom-fps") {\n                let mut custom_fps = custom_fps.parse().unwrap_or(30);',
+      'if let Some(custom_fps) = self.options.get("custom-fps").cloned().or_else(|| Some("60".to_owned())) {\n                let mut custom_fps = custom_fps.parse().unwrap_or(60);')
+
 print("marca MS Desk aplicada")
