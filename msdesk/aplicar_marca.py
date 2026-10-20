@@ -81,6 +81,8 @@ copias = {
     "icon.png": ["res/icon.png", "flutter/assets/icon.png"],
     "logo_dark.png": ["flutter/assets/logo_dark.png"],
     "logo_light.png": ["flutter/assets/logo_light.png"],
+    # MSUPTECH_MSDESK_TITULO_V2: logo do topo do app no celular (M + "MS" originais + "Desk")
+    "msdesk_titulo.png": ["flutter/assets/msdesk_titulo.png"],
 }
 for origem, destinos in copias.items():
     o = os.path.join(marca, origem)

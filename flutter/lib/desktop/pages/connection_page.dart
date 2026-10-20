@@ -80,9 +80,12 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
 
     setupServerWidget() => Flexible(
           child: Offstage(
-            offstage: !(!_svcStopped.value &&
-                stateGlobal.svcStatus.value == SvcStatus.ready &&
-                _svcIsUsingPublicServer.value),
+            // MSUPTECH_MSDESK_SEM_DICA_SERVIDOR_V1: o servidor da MSuptech ja vem embutido no programa; a dica
+            // "configure seu proprio servidor" so confundia o cliente
+            offstage: true ||
+                !(!_svcStopped.value &&
+                    stateGlobal.svcStatus.value == SvcStatus.ready &&
+                    _svcIsUsingPublicServer.value),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [

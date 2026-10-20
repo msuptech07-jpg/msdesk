@@ -45,6 +45,14 @@ class HomePageState extends State<HomePage> {
     initPages();
   }
 
+  // MSUPTECH_MSDESK_MEU_ID_V1: atalho da tela inicial ("Receber acesso") para a aba Compartilhar tela
+  void irParaCompartilhar() {
+    final i = _pages.indexWhere((p) => p is ServerPage);
+    if (i >= 0 && i != _selectedIndex) {
+      setState(() => _selectedIndex = i);
+    }
+  }
+
   void initPages() {
     _pages.clear();
     if (!bind.isIncomingOnly()) {
@@ -150,7 +158,12 @@ class HomePageState extends State<HomePage> {
         ],
       );
     }
-    return Text(bind.mainGetAppNameSync());
+    // MSUPTECH_MSDESK_TITULO_V2: logo MS Desk (M + "MS" originais da MSuptech + "Desk") no topo, no lugar do texto
+    return Image.asset('assets/msdesk_titulo.png',
+        height: 34,
+        fit: BoxFit.contain,
+        errorBuilder: (ctx, error, stackTrace) =>
+            Text(bind.mainGetAppNameSync()));
   }
 }
 

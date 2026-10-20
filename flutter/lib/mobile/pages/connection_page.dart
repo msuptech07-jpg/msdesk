@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hbb/common/formatter/id_formatter.dart';
 import 'package:flutter_hbb/common/widgets/connection_page_title.dart';
 import 'package:flutter_hbb/models/state_model.dart';
@@ -16,6 +17,7 @@ import '../../common/widgets/autocomplete.dart';
 import '../../consts.dart';
 import '../../models/model.dart';
 import '../../models/platform_model.dart';
+import '../../models/server_model.dart';
 import 'home_page.dart';
 
 /// Connection page for connecting to a remote peer.
@@ -64,6 +66,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
     super.initState();
     _allPeersLoader.init(setState);
     _idFocusNode.addListener(onFocusChanged);
+    // MSUPTECH_MSDESK_MEU_ID_V1: busca o proprio ID ja na abertura (antes so na aba Compartilhar tela)
+    if (isAndroid && !bind.isOutgoingOnly()) gFFI.serverModel.fetchID();
     if (_idController.text.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         final lastRemoteId = await bind.mainGetLastRemoteId();
@@ -86,6 +90,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
             delegate: SliverChildListDelegate([
           if (!bind.isCustomClient() && !isIOS)
             Obx(() => _buildUpdateUI(stateGlobal.updateUrl.value)),
+          if (isAndroid && !bind.isOutgoingOnly()) _buildMeuId(),
           _buildRemoteIDTextField(),
         ])),
         SliverFillRemaining(
@@ -94,6 +99,58 @@ class _ConnectionPageState extends State<ConnectionPage> {
         )
       ],
     ).marginOnly(top: 2, left: 10, right: 10);
+  }
+
+  // MSUPTECH_MSDESK_MEU_ID_V1: o proprio ID na tela inicial do celular, com copiar e o atalho "Receber acesso"
+  // (antes a pessoa tinha de procurar em Compartilhar tela ou Configuracoes).
+  Widget _buildMeuId() {
+    return ChangeNotifierProvider.value(
+      value: gFFI.serverModel,
+      child: Consumer<ServerModel>(builder: (context, model, _) {
+        final id = model.serverId.value.text;
+        return Container(
+          margin: const EdgeInsets.only(top: 8, bottom: 2),
+          padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: MyTheme.border.withOpacity(0.6)),
+          ),
+          child: Row(children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Seu ID',
+                      style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  Text(id,
+                      style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: MyTheme.idColor)),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Copiar',
+              icon: const Icon(Icons.copy_outlined),
+              onPressed: () {
+                Clipboard.setData(
+                    ClipboardData(text: id.replaceAll(' ', '').trim()));
+                showToast(translate('Copied'));
+              },
+            ),
+            TextButton(
+              onPressed: () =>
+                  HomePage.homeKey.currentState?.irParaCompartilhar(),
+              child: const Text('Receber\nacesso',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold, height: 1.1)),
+            ),
+          ]),
+        );
+      }),
+    );
   }
 
   /// Callback for the connect button.
