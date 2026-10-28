@@ -276,6 +276,9 @@ struct Session {
     last_recv_time: Arc<Mutex<Instant>>,
     random_password: String,
     tfa: bool,
+    // MSUPTECH_MSDESK_RECONEXAO_V2: sessao liberada pelo clique "Aceitar" (sem senha) tambem e lembrada,
+    // para a volta automatica nao pedir senha nem clique de novo.
+    aprovado_clique: bool,
 }
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -755,6 +758,8 @@ impl Connection {
                         ipc::Data::Authorize => {
                             conn.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::Click);
                             conn.require_2fa.take();
+                            // MSUPTECH_MSDESK_RECONEXAO_V2
+                            raii::AuthedConnID::msdesk_marcar_aprovado_clique(conn.session_key());
                             if !conn.send_logon_response_and_keep_alive().await {
                                 break;
                             }
@@ -2613,6 +2618,13 @@ impl Connection {
             .map(|s| s.to_owned());
         // last_recv_time is a mutex variable shared with connection, can be updated lively.
         if let Some(session) = session {
+            // MSUPTECH_MSDESK_RECONEXAO_V2: a mesma sessao (mesmo tecnico, mesmo session_id) que o dono ja
+            // aceitou pelo clique volta sozinha depois de uma queda, sem senha.
+            if !tfa && session.aprovado_clique {
+                self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::Click);
+                log::info!("is recent session (aceita pelo clique)");
+                return true;
+            }
             if !self.lr.password.is_empty()
                 && (tfa && session.tfa
                     || !tfa && self.validate_password_plain(&session.random_password))
@@ -6950,6 +6962,7 @@ mod raii {
                         random_password: password.unwrap_or_default(),
                         tfa: tfa.unwrap_or_default(),
                         last_recv_time: Arc::new(Mutex::new(Instant::now())),
+                        aprovado_clique: false,
                     },
                 );
             }
@@ -6967,6 +6980,26 @@ mod raii {
                         last_recv_time: Arc::new(Mutex::new(Instant::now())),
                         random_password: "".to_owned(),
                         tfa: true,
+                        aprovado_clique: false,
+                    },
+                );
+            }
+        }
+
+        // MSUPTECH_MSDESK_RECONEXAO_V2
+        pub fn msdesk_marcar_aprovado_clique(key: SessionKey) {
+            let mut lock = SESSIONS.lock().unwrap();
+            if let Some(session) = lock.get_mut(&key) {
+                session.aprovado_clique = true;
+                *session.last_recv_time.lock().unwrap() = Instant::now();
+            } else {
+                lock.insert(
+                    key,
+                    Session {
+                        last_recv_time: Arc::new(Mutex::new(Instant::now())),
+                        random_password: "".to_owned(),
+                        tfa: false,
+                        aprovado_clique: true,
                     },
                 );
             }

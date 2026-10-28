@@ -896,6 +896,9 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
       (await bind.mainGetCommon(key: "permanent-password-set")) == "true";
   final presetPassword = permanentPasswordSet && !localPasswordSet;
   var canSubmit = false;
+  // MSUPTECH_MSDESK_SENHA_OLHINHO_V1: olhinho para ver o que esta digitando (Marcus 28/10: nao conseguia
+  // definir a senha e nao tinha como ver o que saiu no campo) + aviso claro do que falta.
+  var mostrarSenha = false;
   final RxString rxPass = "".obs;
   final rules = [
     DigitValidationRule(),
@@ -930,15 +933,14 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
         if (violations.isNotEmpty) {
           setState(() {
             errMsg0 =
-                '${translate('Prompt')}: ${violations.map((r) => r.name).join(', ')}';
+                'Falta: ${violations.map((r) => r.name).join(', ')}';
           });
           return;
         }
       }
       if (p1.text.trim() != pass) {
         setState(() {
-          errMsg1 =
-              '${translate('Prompt')}: ${translate("The confirmation is not identical.")}';
+          errMsg1 = 'As duas senhas não estão iguais.';
         });
         return;
       }
@@ -975,8 +977,16 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
               children: [
                 Expanded(
                   child: TextField(
-                    obscureText: true,
+                    obscureText: !mostrarSenha,
                     decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                          tooltip: mostrarSenha ? 'Esconder senha' : 'Mostrar senha',
+                          icon: Icon(mostrarSenha
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          onPressed: () =>
+                              setState(() => mostrarSenha = !mostrarSenha),
+                        ),
                         labelText: translate('Password'),
                         errorText: errMsg0.isNotEmpty ? errMsg0 : null),
                     controller: p0,
@@ -1005,8 +1015,16 @@ void setPasswordDialog({VoidCallback? notEmptyCallback}) async {
               children: [
                 Expanded(
                   child: TextField(
-                    obscureText: true,
+                    obscureText: !mostrarSenha,
                     decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                          tooltip: mostrarSenha ? 'Esconder senha' : 'Mostrar senha',
+                          icon: Icon(mostrarSenha
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          onPressed: () =>
+                              setState(() => mostrarSenha = !mostrarSenha),
+                        ),
                         labelText: translate('Confirmation'),
                         errorText: errMsg1.isNotEmpty ? errMsg1 : null),
                     controller: p1,
