@@ -42,7 +42,8 @@ troca(cfg, 'pub static ref APP_NAME: RwLock<String> = RwLock::new("RustDesk".to_
 # - senha de uso unico de 8 caracteres com letras (muda a cada sessao, como AnyDesk/TeamViewer)
 # - nao se anuncia na rede local e nao aceita conexao direta por IP (so pelo nosso servidor, com a nossa chave)
 # - o tecnico nao altera as configuracoes do cliente a distancia
-# - desconecta sozinho apos 10 min sem uso
+# - NAO desconecta por inatividade (MSUPTECH_MSDESK_SEM_INATIVIDADE_V1, Marcus 28/10: "fechou minha conexao, isso
+#   nao pode acontecer"; quem quer limite usa o botao Tempo de sessao)
 # - nao oferece "atualizar" para o RustDesk oficial (perderia a marca e o servidor)
 PADRAO = {
     "verification-method": "use-temporary-password",
@@ -51,7 +52,7 @@ PADRAO = {
     "enable-lan-discovery": "N",
     "direct-server": "N",
     "allow-remote-config-modification": "N",
-    "allow-auto-disconnect": "Y",
+    "allow-auto-disconnect": "N",
     "auto-disconnect-timeout": "10",
     "enable-check-update": "N",
 }
