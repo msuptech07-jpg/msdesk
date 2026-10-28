@@ -18,6 +18,7 @@ import 'package:window_size/window_size.dart' as window_size;
 
 import '../../common.dart';
 import '../../models/model.dart';
+import '../../models/msdesk_tempo_sessao.dart';
 import '../../models/platform_model.dart';
 import '../../common/shared_state.dart';
 import './popup_menu.dart';
@@ -850,6 +851,10 @@ class _RemoteToolbarState extends State<RemoteToolbar> {
       toolbarItems.add(_VoiceCallMenu(id: widget.id, ffi: widget.ffi));
     }
     if (!isWeb) toolbarItems.add(_RecordMenu());
+    // MSUPTECH_MSDESK_TEMPO_SESSAO_V1
+    if (widget.ffi.connType == ConnType.defaultConn) {
+      toolbarItems.add(_TempoSessaoMenu(ffi: widget.ffi));
+    }
     toolbarItems.add(_CloseMenu(id: widget.id, ffi: widget.ffi));
     final toolbarBorderRadius = BorderRadius.all(Radius.circular(4.0));
     // innerAxis: how the toolbar icons themselves flow.
@@ -2968,6 +2973,52 @@ class _RecordMenu extends StatelessWidget {
           ? _ToolbarTheme.hoverRedColor
           : _ToolbarTheme.hoverBlueColor,
     );
+  }
+}
+
+// MSUPTECH_MSDESK_TEMPO_SESSAO_V1: botao "Tempo de sessao" (relogio). Com o tempo ligado mostra quanto falta
+// (laranja nos ultimos 5 min).
+class _TempoSessaoMenu extends StatelessWidget {
+  final FFI ffi;
+  const _TempoSessaoMenu({Key? key, required this.ffi}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final tempo = MsdeskTempoSessao.de(ffi);
+    return Obx(() {
+      final falta = tempo.restante.value;
+      final standby = tempo.emStandby.value;
+      final fim = falta != null && falta <= const Duration(minutes: 5);
+      final cor = (fim || standby) ? Colors.orange[800]! : _ToolbarTheme.blueColor;
+      final corHover =
+          (fim || standby) ? Colors.orange[900]! : _ToolbarTheme.hoverBlueColor;
+      final texto = standby ? 'stand-by' : (falta == null ? null : msdeskRelogio(falta));
+      final icone = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined,
+              color: Colors.white, size: _ToolbarTheme.buttonSize * 0.7),
+          if (texto != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 2, right: 4),
+              child: Text(texto,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
+            ),
+        ],
+      );
+      return _IconMenuButton(
+        icon: icone,
+        width: texto == null ? null : (standby ? 76 : (texto.length > 5 ? 76 : 62)),
+        tooltip: falta == null ? 'Tempo de sessão' : 'Tempo de sessão: faltam $texto',
+        onPressed: () => msdeskEscolherTempoSessao(ffi),
+        color: cor,
+        hoverColor: corHover,
+      );
+    });
   }
 }
 

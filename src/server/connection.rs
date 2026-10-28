@@ -504,7 +504,11 @@ const H1: Duration = Duration::from_secs(3600);
 const MILLI1: Duration = Duration::from_millis(1);
 const SEND_TIMEOUT_VIDEO: u64 = 12_000;
 const SEND_TIMEOUT_OTHER: u64 = SEND_TIMEOUT_VIDEO * 10;
-const SESSION_TIMEOUT: Duration = Duration::from_secs(30);
+// MSUPTECH_MSDESK_RECONEXAO_V1: a sessao ja liberada fica lembrada 30 min (era 30 s) depois da ultima
+// mensagem. Assim, se a internet de um dos lados cair e voltar, o tecnico entra de novo sozinho, sem pedir
+// a senha de novo (a senha unica ja foi trocada no 1o acesso). Vale so para a MESMA sessao (mesmo
+// session_id do tecnico); fechar e abrir de novo pede senha como sempre.
+const SESSION_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 /// Whether the DRM backend can serve a Wayland login screen here.
 ///

@@ -41,6 +41,7 @@ import '../common.dart';
 import '../utils/image.dart' as img;
 import '../common/widgets/dialog.dart';
 import 'input_model.dart';
+import 'msdesk_tempo_sessao.dart';
 import 'platform_model.dart';
 import 'package:flutter_hbb/utils/scale.dart';
 
@@ -908,6 +909,12 @@ class FfiModel with ChangeNotifier {
       parent.target?.inputModel.setRelativeMouseMode(false);
     }
 
+    // MSUPTECH_MSDESK_TEMPO_SESSAO_V1: em stand-by a queda nao fecha a aba; o "Voltar" reconecta.
+    if (MsdeskTempoSessao.daSessao(sessionId)?.engolirQuedaNoStandby(title) ==
+        true) {
+      return;
+    }
+
     if (type == 're-input-password') {
       wrongPasswordDialog(sessionId, dialogManager, type, title, text);
     } else if (type == 'input-2fa') {
@@ -965,6 +972,9 @@ class FfiModel with ChangeNotifier {
       if (!hasRetry) {
         hasRetry = shouldAutoRetryOnOffline(type, title, text);
       }
+      if (!hasRetry) {
+        hasRetry = msdeskReconectarSozinho(type, title, text);
+      }
       showMsgBox(sessionId, type, title, text, link, hasRetry, dialogManager);
     }
   }
@@ -1021,6 +1031,38 @@ class FfiModel with ChangeNotifier {
       }
     }
     return false;
+  }
+
+  // MSUPTECH_MSDESK_RECONEXAO_V1: "a hora que o acesso cair (internet oscila), volta sozinho" (Marcus 28/10).
+  // O RustDesk so insistia ~30 s com o aparelho offline e desistia em qualquer erro com "failed"
+  // (ex.: repasse fora do ar enquanto a internet volta). Aqui, depois que a sessao JA CONECTOU uma vez,
+  // qualquer queda de rede tenta de novo por ate 30 min. Nao insiste quando foi de proposito:
+  // fechado pelo outro lado, inatividade, senha, permissao, ID inexistente, tempo de sessao acabou.
+  DateTime? _msdeskQuedaInicio;
+  static const _msdeskReconexaoMinutos = 30;
+
+  bool msdeskReconectarSozinho(String type, String title, String text) {
+    if (type != 'error' || title != 'Connection Error' || !_pi.isSet.isTrue) {
+      return false;
+    }
+    if (parent.target?.closed == true) return false;
+    final t = text.toLowerCase();
+    const deProposito = [
+      'manually',
+      'inactivity',
+      'password',
+      'not allowed',
+      'restricted',
+      'mismatch',
+      'incoming only',
+      'not exist',
+      'license',
+      'licen',
+    ];
+    if (deProposito.any((p) => t.contains(p))) return false;
+    _msdeskQuedaInicio ??= DateTime.now();
+    return DateTime.now().difference(_msdeskQuedaInicio!).inMinutes <
+        _msdeskReconexaoMinutos;
   }
 
   handleToast(Map<String, dynamic> evt, SessionID sessionId, String peerId) {
@@ -1089,10 +1131,12 @@ class FfiModel with ChangeNotifier {
       _timer = Timer(Duration(seconds: _reconnects), () {
         reconnect(dialogManager, sessionId, false);
       });
-      _reconnects *= 2;
+      // MSUPTECH_MSDESK_RECONEXAO_V1: espera dobrava sem teto (1,2,4...128 s); agora no maximo 10 s.
+      _reconnects = _reconnects * 2 > 10 ? 10 : _reconnects * 2;
     } else {
       _reconnects = 1;
       _offlineReconnectStartTime = null;
+      _msdeskQuedaInicio = null;
     }
   }
 
@@ -1447,6 +1491,7 @@ class FfiModel with ChangeNotifier {
       if (displays.isNotEmpty) {
         _reconnects = 1;
         _offlineReconnectStartTime = null;
+        _msdeskQuedaInicio = null; // MSUPTECH_MSDESK_RECONEXAO_V1
         resetRestartReconnectState();
         waitForFirstImage.value = true;
         isRefreshing = false;
